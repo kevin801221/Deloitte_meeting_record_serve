@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YCM 智能會議記錄助手</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-mic-fill me-2"></i>YCM 智能會議記錄助手
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#userManualModal">
+                            <i class="bi bi-book me-1"></i>使用手冊
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-bs-toggle="modal" data-bs-target="#apiKeyModal">
+                            <i class="bi bi-key-fill me-1"></i>設置 API 密鑰
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/your-username/YCM_meeting_record" target="_blank">
+                            <i class="bi bi-github me-1"></i>GitHub
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="hero-section text-center">
+                    <h1 class="display-4 mb-3">智能會議記錄助手</h1>
+                    <p class="lead">將您的會議錄音轉換為文字，並生成結構化摘要，提高會議效率</p>
+                    <div class="api-status mt-4">
+                        <div class="d-flex justify-content-center">
+                            <div class="status-indicator me-4">
+                                <span id="text-to-summary-status" class="status-dot"></span>
+                                <span>文字轉摘要 API</span>
+                            </div>
+                            <div class="status-indicator me-4">
+                                <span id="audio-to-text-status" class="status-dot"></span>
+                                <span>音頻轉文字 API</span>
+                            </div>
+                            <div class="status-indicator">
+                                <span id="audio-to-summary-status" class="status-dot"></span>
+                                <span>音頻轉摘要 API</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="audio-to-text-tab" data-bs-toggle="tab" data-bs-target="#audio-to-text-pane" type="button" role="tab">
+                            <i class="bi bi-mic me-2"></i>音頻轉文字
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="text-to-summary-tab" data-bs-toggle="tab" data-bs-target="#text-to-summary-pane" type="button" role="tab">
+                            <i class="bi bi-file-text me-2"></i>文字轉摘要
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="audio-to-summary-tab" data-bs-toggle="tab" data-bs-target="#audio-to-summary-pane" type="button" role="tab">
+                            <i class="bi bi-file-earmark-text me-2"></i>音頻轉摘要
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="local-recording-tab" data-bs-toggle="tab" data-bs-target="#local-recording-pane" type="button" role="tab">
+                            <i class="bi bi-record-circle me-2"></i>本地錄音
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <!-- 音頻轉文字 -->
+                    <div class="tab-pane fade show active" id="audio-to-text-pane" role="tabpanel" tabindex="0">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3 class="card-title mb-4">音頻轉文字</h3>
+                                <form id="audioToTextForm">
+                                    <div class="mb-3">
+                                        <label for="audio-file" class="form-label">上傳音頻文件</label>
+                                        <input type="file" class="form-control" id="audio-file" accept="audio/*" required>
+                                        <div class="form-text">支持的格式：MP3, WAV, M4A 等</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-arrow-right-circle me-2"></i>轉換為文字
+                                    </button>
+                                </form>
+                                <div class="mt-4">
+                                    <h4>轉錄結果</h4>
+                                    <div id="audioToTextResult" class="result-box">
+                                        <div class="placeholder-text">轉錄結果將顯示在這裡...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 文字轉摘要 -->
+                    <div class="tab-pane fade" id="text-to-summary-pane" role="tabpanel" tabindex="0">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3 class="card-title mb-4">文字轉摘要</h3>
+                                <form id="textToSummaryForm">
+                                    <div class="mb-3">
+                                        <label for="meeting-title-text" class="form-label">會議標題 (選填)</label>
+                                        <input type="text" class="form-control" id="meeting-title-text" placeholder="例如: 週一產品規劃會議">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="participants-text" class="form-label">參與者 (選填, 用逗號分隔)</label>
+                                        <input type="text" class="form-control" id="participants-text" placeholder="例如: 張三, 李四, 王五">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="meeting-text" class="form-label">會議文字記錄 (必填)</label>
+                                        <textarea class="form-control" id="meeting-text" rows="6" placeholder="請輸入會議文字記錄..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-arrow-right-circle me-2"></i>生成摘要
+                                    </button>
+                                </form>
+                                <div class="mt-4">
+                                    <h4>摘要結果</h4>
+                                    <div id="textToSummaryResult" class="result-box">
+                                        <div class="placeholder-text">摘要結果將顯示在這裡...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 音頻轉摘要 -->
+                    <div class="tab-pane fade" id="audio-to-summary-pane" role="tabpanel" tabindex="0">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3 class="card-title mb-4">音頻轉摘要</h3>
+                                <form id="audioToSummaryForm">
+                                    <div class="mb-3">
+                                        <label for="audio-file-summary" class="form-label">上傳音頻文件</label>
+                                        <input type="file" class="form-control" id="audio-file-summary" accept="audio/*" required>
+                                        <div class="form-text">支持的格式：MP3, WAV, M4A 等</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="meeting-title-audio" class="form-label">會議標題 (選填)</label>
+                                        <input type="text" class="form-control" id="meeting-title-audio" placeholder="例如: 週一產品規劃會議">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="participants-audio" class="form-label">參與者 (選填, 用逗號分隔)</label>
+                                        <input type="text" class="form-control" id="participants-audio" placeholder="例如: 張三, 李四, 王五">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-arrow-right-circle me-2"></i>生成摘要
+                                    </button>
+                                </form>
+                                <div class="mt-4">
+                                    <h4>摘要結果</h4>
+                                    <div id="audioToSummaryResult" class="result-box">
+                                        <div class="placeholder-text">摘要結果將顯示在這裡...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 本地錄音 -->
+                    <div class="tab-pane fade" id="local-recording-pane" role="tabpanel" tabindex="0">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3 class="card-title mb-4">本地錄音</h3>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>使用此功能可以直接在瀏覽器中錄製會議音頻，系統會自動保存並生成摘要。
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="meeting-title-recording" class="form-label">會議標題</label>
+                                    <input type="text" class="form-control" id="meeting-title-recording" placeholder="例如: 週一產品規劃會議">
+                                </div>
+                                
+                                <div class="recording-controls text-center my-4">
+                                    <div class="btn-group">
+                                        <button id="startRecording" class="btn btn-danger btn-lg">
+                                            <i class="bi bi-record-circle me-2"></i>開始錄音
+                                        </button>
+                                        <button id="pauseRecording" class="btn btn-warning btn-lg" disabled>
+                                            <i class="bi bi-pause-circle me-2"></i>暫停
+                                        </button>
+                                        <button id="resumeRecording" class="btn btn-info btn-lg" disabled>
+                                            <i class="bi bi-play-circle me-2"></i>繼續
+                                        </button>
+                                        <button id="stopRecording" class="btn btn-secondary btn-lg" disabled>
+                                            <i class="bi bi-stop-circle me-2"></i>停止
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="recording-status text-center mb-4">
+                                    <div id="recordingStatus">準備就緒</div>
+                                    <div id="recordingTime" class="display-6 my-3">00:00:00</div>
+                                    <div class="audio-visualizer">
+                                        <canvas id="audioVisualizer" width="600" height="100"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <div class="recorded-audio mt-4" id="recordedAudioContainer" style="display: none;">
+                                    <h4>錄音預覽</h4>
+                                    <audio id="recordedAudio" controls class="w-100 mb-3"></audio>
+                                    <div class="d-flex justify-content-center">
+                                        <button id="generateSummaryFromRecording" class="btn btn-primary btn-lg">
+                                            <i class="bi bi-file-earmark-text me-2"></i>生成最終摘要
+                                        </button>
+                                    </div>
+                                    <div id="saveStatus" class="alert alert-success mt-3" style="display: none;">
+                                        <i class="bi bi-check-circle me-2"></i><span id="saveStatusText"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用手冊模態框 -->
+    <div class="modal fade" id="userManualModal" tabindex="-1" aria-labelledby="userManualModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userManualModalLabel"><i class="bi bi-book me-2"></i>使用手冊</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="accordion" id="userManualAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                    <i class="bi bi-1-circle me-2"></i>開始使用前的準備
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#userManualAccordion">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li><strong>設置 OpenAI API 密鑰</strong>：點擊右上角的「設置 API 密鑰」按鈕，輸入您的 OpenAI API 密鑰。如果您沒有 API 密鑰，可以在 <a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI 官網</a> 申請。</li>
+                                        <li><strong>檢查 API 狀態</strong>：頁面頂部顯示了三個 API 的狀態指示器，確保它們都是綠色的，表示 API 可用。</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    <i class="bi bi-2-circle me-2"></i>音頻轉文字功能
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#userManualAccordion">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>點擊「音頻轉文字」標籤。</li>
+                                        <li>上傳您的會議錄音文件（支持 WAV、MP3、M4A 等格式）。</li>
+                                        <li>輸入會議標題和參與者信息（可選）。</li>
+                                        <li>點擊「轉換為文字」按鈕。</li>
+                                        <li>等待系統處理，處理時間取決於音頻長度。</li>
+                                        <li>處理完成後，您將看到轉錄的文字結果。</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    <i class="bi bi-3-circle me-2"></i>音頻轉摘要功能
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#userManualAccordion">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>點擊「音頻轉摘要」標籤。</li>
+                                        <li>上傳您的會議錄音文件。</li>
+                                        <li>輸入會議標題和參與者信息（可選）。</li>
+                                        <li>點擊「生成摘要」按鈕。</li>
+                                        <li>等待系統處理，這可能需要幾分鐘時間。</li>
+                                        <li>處理完成後，您將看到結構化的會議摘要，包括主要議題、決策和行動項目。</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingFour">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                    <i class="bi bi-4-circle me-2"></i>本地錄音功能
+                                </button>
+                            </h2>
+                            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#userManualAccordion">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>點擊「本地錄音」標籤。</li>
+                                        <li>點擊「開始錄音」按鈕，授予瀏覽器麥克風訪問權限。</li>
+                                        <li>開始您的會議或談話。</li>
+                                        <li>完成後，點擊「停止錄音」按鈕。</li>
+                                        <li>您可以點擊「播放」按鈕預覽錄音，或點擊「下載」按鈕保存錄音文件。</li>
+                                        <li>如果您想直接處理錄音，可以點擊「轉換為文字」或「生成摘要」按鈕。</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingFive">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                    <i class="bi bi-5-circle me-2"></i>文字轉摘要功能
+                                </button>
+                            </h2>
+                            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#userManualAccordion">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>點擊「文字轉摘要」標籤。</li>
+                                        <li>輸入或粘貼會議文字記錄。</li>
+                                        <li>輸入會議標題和參與者信息（可選）。</li>
+                                        <li>點擊「生成摘要」按鈕。</li>
+                                        <li>等待系統處理，這可能需要幾分鐘時間，取決於文字長度。</li>
+                                        <li>處理完成後，您將看到結構化的會議摘要。</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingSix">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>常見問題與故障排除
+                                </button>
+                            </h2>
+                            <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#userManualAccordion">
+                                <div class="accordion-body">
+                                    <dl>
+                                        <dt>Q: API 狀態顯示為紅色</dt>
+                                        <dd>A: 請確保您已設置有效的 OpenAI API 密鑰，並且 API 狀態指示器顯示為綠色。</dd>
+                                        
+                                        <dt>Q: 上傳音頻文件時出現錯誤</dt>
+                                        <dd>A: 請確保您的音頻文件格式受支持（WAV、MP3、M4A 等），且文件大小不超過 100MB。</dd>
+                                        
+                                        <dt>Q: 處理時間過長</dt>
+                                        <dd>A: 處理時間取決於音頻長度和文字數量。較長的會議錄音可能需要更多時間處理。</dd>
+                                        
+                                        <dt>Q: 錄音功能無法使用</dt>
+                                        <dd>A: 請確保您已授予瀏覽器麥克風訪問權限，並且您的設備有可用的麥克風。</dd>
+                                        
+                                        <dt>Q: 生成的摘要質量不佳</dt>
+                                        <dd>A: 摘要質量取決於音頻轉錄的準確性和會議內容的結構。嘈雜的環境或不清晰的發言可能影響結果。</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API 密鑰模態框 -->
+    <div class="modal fade" id="apiKeyModal" tabindex="-1" aria-labelledby="apiKeyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="apiKeyModalLabel">設置 OpenAI API 密鑰</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>您可以使用系統提供的默認 API 密鑰，或設置您自己的 OpenAI API 密鑰。
+                    </div>
+                    <div id="apiKeyStatus"></div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="useDefaultApiKey" checked>
+                        <label class="form-check-label" for="useDefaultApiKey">
+                            使用系統默認 API 密鑰
+                        </label>
+                    </div>
+                    <div class="mb-3" id="customApiKeySection">
+                        <label for="api-key" class="form-label">您的 OpenAI API 密鑰</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="api-key" placeholder="sk-...">
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">您的 API 密鑰將安全地存儲在您的瀏覽器中，不會發送到我們的服務器。</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-primary" id="save-api-key">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <span class="text-muted"> 2025 YCM . OpenAI API </span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

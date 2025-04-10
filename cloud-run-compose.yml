@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  # API 服務
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile.api
+    container_name: ycm_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app/api
+      - ./uploads:/app/uploads
+      - ./temp:/app/temp
+    environment:
+      # API 密鑰將通過前端輸入，但也可以設置默認值
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # 前端服務
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ycm_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+# 用於 Cloud Run 部署的配置
+# 在 Cloud Run 上，你需要為每個服務創建單獨的部署
+# 例如：
+# 1. 部署 API 服務: gcloud run deploy ycm-api --source . --dockerfile api/Dockerfile.api
+# 2. 部署前端服務: gcloud run deploy ycm-frontend --source ./frontend --dockerfile frontend/Dockerfile
+#
+# 注意：在 Cloud Run 上，你需要設置環境變數和服務 URL
+# 例如，前端需要知道 API 的 URL，你可以在部署時設置環境變數：
+# gcloud run deploy ycm-frontend --set-env-vars="API_URL=https://ycm-api-xxxxx.run.app"

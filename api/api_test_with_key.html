@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會議記錄 API 測試平台</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            border-radius: 4px 4px 0 0;
+            margin-bottom: 0;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 16px;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        .tab button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            margin-top: 0;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], 
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        input[type="file"] {
+            padding: 10px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .api-key-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .api-key-section h2 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .api-key-section p {
+            margin-bottom: 10px;
+            color: #6c757d;
+        }
+        .api-key-input {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <h1>會議記錄 API 測試平台</h1>
+    
+    <div class="api-key-section">
+        <h2>OpenAI API 密鑰設置</h2>
+        <p>請輸入您的 OpenAI API 密鑰以使用所有功能。此密鑰僅在本地使用，不會被發送到其他地方。</p>
+        <div class="form-group">
+            <label for="api-key">OpenAI API 密鑰:</label>
+            <div class="api-key-input">
+                <input type="password" id="api-key" placeholder="sk-..." required>
+                <span class="toggle-password" onclick="togglePasswordVisibility()">顯示</span>
+            </div>
+        </div>
+        <button id="save-api-key">保存 API 密鑰</button>
+        <div id="api-key-status" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="tab">
+        <button class="tablinks active" onclick="openTab(event, 'audioToText')">音頻轉文字</button>
+        <button class="tablinks" onclick="openTab(event, 'textToSummary')">文字轉摘要</button>
+        <button class="tablinks" onclick="openTab(event, 'audioToSummary')">音頻轉摘要</button>
+    </div>
+    
+    <!-- 音頻轉文字 -->
+    <div id="audioToText" class="tabcontent" style="display: block;">
+        <h2>音頻轉文字 API 測試</h2>
+        
+        <form id="audioToTextForm">
+            <div class="form-group">
+                <label for="audio-file">上傳音頻文件:</label>
+                <input type="file" id="audio-file" accept="audio/*" required>
+            </div>
+            
+            <button type="submit">轉換為文字</button>
+        </form>
+        
+        <div class="form-group">
+            <h3>轉錄結果:</h3>
+            <div id="audioToTextResult" class="result">結果將顯示在這裡...</div>
+        </div>
+    </div>
+    
+    <!-- 文字轉摘要 -->
+    <div id="textToSummary" class="tabcontent">
+        <h2>文字轉摘要 API 測試</h2>
+        
+        <form id="textToSummaryForm">
+            <div class="form-group">
+                <label for="meeting-title-text">會議標題 (選填):</label>
+                <input type="text" id="meeting-title-text" placeholder="例如: 週一產品規劃會議">
+            </div>
+            
+            <div class="form-group">
+                <label for="participants-text">參與者 (選填, 用逗號分隔):</label>
+                <input type="text" id="participants-text" placeholder="例如: 張三, 李四, 王五">
+            </div>
+            
+            <div class="form-group">
+                <label for="meeting-text">會議文字記錄 (必填):</label>
+                <textarea id="meeting-text" placeholder="請輸入會議文字記錄..." required></textarea>
+            </div>
+            
+            <button type="submit">生成摘要</button>
+        </form>
+        
+        <div class="form-group">
+            <h3>摘要結果:</h3>
+            <div id="textToSummaryResult" class="result">結果將顯示在這裡...</div>
+        </div>
+    </div>
+    
+    <!-- 音頻轉摘要 -->
+    <div id="audioToSummary" class="tabcontent">
+        <h2>音頻轉摘要 API 測試</h2>
+        
+        <form id="audioToSummaryForm">
+            <div class="form-group">
+                <label for="audio-file-summary">上傳音頻文件:</label>
+                <input type="file" id="audio-file-summary" accept="audio/*" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="meeting-title-audio">會議標題 (選填):</label>
+                <input type="text" id="meeting-title-audio" placeholder="例如: 週一產品規劃會議">
+            </div>
+            
+            <div class="form-group">
+                <label for="participants-audio">參與者 (選填, 用逗號分隔):</label>
+                <input type="text" id="participants-audio" placeholder="例如: 張三, 李四, 王五">
+            </div>
+            
+            <button type="submit">生成文字和摘要</button>
+        </form>
+        
+        <div class="form-group">
+            <h3>轉錄結果:</h3>
+            <div id="audioToSummaryTranscription" class="result">轉錄結果將顯示在這裡...</div>
+        </div>
+        
+        <div class="form-group">
+            <h3>摘要結果:</h3>
+            <div id="audioToSummaryResult" class="result">摘要結果將顯示在這裡...</div>
+        </div>
+    </div>
+    
+    <script>
+        // API 密鑰管理
+        let apiKey = localStorage.getItem('openai_api_key') || '';
+        
+        // 如果本地存儲中有 API 密鑰，則填充輸入框
+        if (apiKey) {
+            document.getElementById('api-key').value = apiKey;
+            document.getElementById('api-key-status').textContent = "API 密鑰已從本地存儲加載";
+            document.getElementById('api-key-status').style.display = "block";
+            document.getElementById('api-key-status').className = "result alert-success";
+        }
+        
+        // 保存 API 密鑰到本地存儲
+        document.getElementById('save-api-key').addEventListener('click', function() {
+            const inputKey = document.getElementById('api-key').value.trim();
+            if (!inputKey) {
+                document.getElementById('api-key-status').textContent = "請輸入有效的 API 密鑰";
+                document.getElementById('api-key-status').style.display = "block";
+                document.getElementById('api-key-status').className = "result alert-error";
+                return;
+            }
+            
+            apiKey = inputKey;
+            localStorage.setItem('openai_api_key', apiKey);
+            
+            document.getElementById('api-key-status').textContent = "API 密鑰已保存到本地存儲";
+            document.getElementById('api-key-status').style.display = "block";
+            document.getElementById('api-key-status').className = "result alert-success";
+        });
+        
+        // 切換密碼可見性
+        function togglePasswordVisibility() {
+            const apiKeyInput = document.getElementById('api-key');
+            const toggleButton = document.querySelector('.toggle-password');
+            
+            if (apiKeyInput.type === "password") {
+                apiKeyInput.type = "text";
+                toggleButton.textContent = "隱藏";
+            } else {
+                apiKeyInput.type = "password";
+                toggleButton.textContent = "顯示";
+            }
+        }
+        
+        // 檢查 API 密鑰是否設置
+        function checkApiKey() {
+            if (!apiKey) {
+                alert('請先設置 OpenAI API 密鑰');
+                return false;
+            }
+            return true;
+        }
+        
+        // 切換標籤頁
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+        // 音頻轉文字表單提交
+        document.getElementById('audioToTextForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!checkApiKey()) return;
+            
+            const audioFile = document.getElementById('audio-file').files[0];
+            if (!audioFile) {
+                alert('請選擇音頻文件');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('audioToTextResult');
+            resultDiv.textContent = '正在處理音頻，請稍候...';
+            resultDiv.className = 'result loading';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', audioFile);
+                
+                const response = await fetch('http://localhost:8003/api/audio-to-text', {
+                    method: 'POST',
+                    headers: {
+                        'X-API-KEY': apiKey
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.className = 'result';
+                
+                if (data.status === 'success') {
+                    resultDiv.textContent = data.transcription;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">${data.message || '處理失敗'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.className = 'result';
+                resultDiv.innerHTML = `<div class="alert alert-error">發生錯誤: ${error.message}</div>`;
+            }
+        });
+        
+        // 文字轉摘要表單提交
+        document.getElementById('textToSummaryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!checkApiKey()) return;
+            
+            const meetingTitle = document.getElementById('meeting-title-text').value;
+            const participantsText = document.getElementById('participants-text').value;
+            const meetingText = document.getElementById('meeting-text').value;
+            
+            if (!meetingText) {
+                alert('請輸入會議文字記錄');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('textToSummaryResult');
+            resultDiv.textContent = '正在生成摘要，請稍候...';
+            resultDiv.className = 'result loading';
+            
+            try {
+                const participants = participantsText ? 
+                    participantsText.split(',').map(p => p.trim()).filter(p => p) : 
+                    [];
+                
+                const requestData = {
+                    text: meetingText,
+                    meeting_title: meetingTitle || undefined,
+                    participants: participants.length > 0 ? participants : undefined
+                };
+                
+                const response = await fetch('http://localhost:8001/api/text-to-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-KEY': apiKey
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.className = 'result';
+                
+                if (response.ok) {
+                    resultDiv.textContent = data.summary;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">${data.detail || '處理失敗'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.className = 'result';
+                resultDiv.innerHTML = `<div class="alert alert-error">發生錯誤: ${error.message}</div>`;
+            }
+        });
+        
+        // 音頻轉摘要表單提交
+        document.getElementById('audioToSummaryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!checkApiKey()) return;
+            
+            const audioFile = document.getElementById('audio-file-summary').files[0];
+            const meetingTitle = document.getElementById('meeting-title-audio').value;
+            const participantsText = document.getElementById('participants-audio').value;
+            
+            if (!audioFile) {
+                alert('請選擇音頻文件');
+                return;
+            }
+            
+            const transcriptionDiv = document.getElementById('audioToSummaryTranscription');
+            const resultDiv = document.getElementById('audioToSummaryResult');
+            
+            transcriptionDiv.textContent = '正在處理音頻，請稍候...';
+            transcriptionDiv.className = 'result loading';
+            resultDiv.textContent = '正在生成摘要，請稍候...';
+            resultDiv.className = 'result loading';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', audioFile);
+                formData.append('meeting_title', meetingTitle || '');
+                formData.append('participants', participantsText || '');
+                
+                const response = await fetch('http://localhost:8002/api/audio-to-summary', {
+                    method: 'POST',
+                    headers: {
+                        'X-API-KEY': apiKey
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                transcriptionDiv.className = 'result';
+                resultDiv.className = 'result';
+                
+                if (data.status === 'success') {
+                    transcriptionDiv.textContent = data.transcription;
+                    resultDiv.textContent = data.summary;
+                } else {
+                    transcriptionDiv.innerHTML = `<div class="alert alert-error">${data.message || '處理失敗'}</div>`;
+                    resultDiv.innerHTML = `<div class="alert alert-error">${data.message || '處理失敗'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                transcriptionDiv.className = 'result';
+                resultDiv.className = 'result';
+                transcriptionDiv.innerHTML = `<div class="alert alert-error">發生錯誤: ${error.message}</div>`;
+                resultDiv.innerHTML = `<div class="alert alert-error">發生錯誤: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

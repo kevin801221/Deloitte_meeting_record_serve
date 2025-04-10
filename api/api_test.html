@@ -1,0 +1,483 @@
+<!-- <!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會議摘要 API 測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+        }
+        input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>會議摘要 API 測試</h1>
+    
+    <div>
+        <label for="meeting-title">會議標題 (選填):</label>
+        <input type="text" id="meeting-title" placeholder="例如: 週一產品規劃會議">
+    </div>
+    
+    <div>
+        <label for="participants">參與者 (選填, 用逗號分隔):</label>
+        <input type="text" id="participants" placeholder="例如: 張三, 李四, 王五">
+    </div>
+    
+    <div>
+        <label for="meeting-text">會議文字記錄 (必填):</label>
+        <textarea id="meeting-text" placeholder="請輸入會議文字記錄..."></textarea>
+    </div>
+    
+    <button id="submit-btn">生成摘要</button>
+    
+    <div>
+        <h2>摘要結果:</h2>
+        <div id="result">結果將顯示在這裡...</div>
+    </div>
+    
+    <script>
+        document.getElementById('submit-btn').addEventListener('click', async function() {
+            const meetingTitle = document.getElementById('meeting-title').value;
+            const participantsText = document.getElementById('participants').value;
+            const meetingText = document.getElementById('meeting-text').value;
+            
+            // 檢查必填字段
+            if (!meetingText) {
+                alert('請輸入會議文字記錄');
+                return;
+            }
+            
+            // 處理參與者列表
+            const participants = participantsText ? 
+                participantsText.split(',').map(p => p.trim()).filter(p => p) : 
+                [];
+            
+            // 準備請求數據
+            const requestData = {
+                text: meetingText,
+                meeting_title: meetingTitle || undefined,
+                participants: participants.length > 0 ? participants : undefined
+            };
+            
+            // 顯示加載狀態
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = '正在生成摘要，請稍候...';
+            
+            try {
+                // 發送 API 請求
+                const response = await fetch('http://localhost:8001/api/text-to-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 顯示結果
+                resultDiv.textContent = data.summary;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.textContent = `發生錯誤: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會議記錄 API 測試平台</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 16px;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        .tab button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            background-color: white;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 200px;
+            resize: vertical;
+        }
+        button[type="submit"] {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>會議記錄 API 測試平台</h1>
+    
+    <div class="tab">
+        <button class="tablinks active" onclick="openTab(event, 'audioToText')">音頻轉文字</button>
+        <button class="tablinks" onclick="openTab(event, 'textToSummary')">文字轉摘要</button>
+        <button class="tablinks" onclick="openTab(event, 'audioToSummary')">音頻轉摘要</button>
+    </div>
+    
+    <!-- 音頻轉文字 -->
+    <div id="audioToText" class="tabcontent" style="display: block;">
+        <h2>音頻轉文字 API 測試</h2>
+        
+        <form id="audioToTextForm">
+            <div class="form-group">
+                <label for="audio-file">上傳音頻文件:</label>
+                <input type="file" id="audio-file" accept="audio/*" required>
+            </div>
+            
+            <button type="submit">轉換為文字</button>
+        </form>
+        
+        <div class="form-group">
+            <h3>轉錄結果:</h3>
+            <div id="audioToTextResult" class="result">結果將顯示在這裡...</div>
+        </div>
+    </div>
+    
+    <!-- 文字轉摘要 -->
+    <div id="textToSummary" class="tabcontent">
+        <h2>文字轉摘要 API 測試</h2>
+        
+        <form id="textToSummaryForm">
+            <div class="form-group">
+                <label for="meeting-title-text">會議標題 (選填):</label>
+                <input type="text" id="meeting-title-text" placeholder="例如: 週一產品規劃會議">
+            </div>
+            
+            <div class="form-group">
+                <label for="participants-text">參與者 (選填, 用逗號分隔):</label>
+                <input type="text" id="participants-text" placeholder="例如: 張三, 李四, 王五">
+            </div>
+            
+            <div class="form-group">
+                <label for="meeting-text">會議文字記錄 (必填):</label>
+                <textarea id="meeting-text" placeholder="請輸入會議文字記錄..." required></textarea>
+            </div>
+            
+            <button type="submit">生成摘要</button>
+        </form>
+        
+        <div class="form-group">
+            <h3>摘要結果:</h3>
+            <div id="textToSummaryResult" class="result">結果將顯示在這裡...</div>
+        </div>
+    </div>
+    
+    <!-- 音頻轉摘要 -->
+    <div id="audioToSummary" class="tabcontent">
+        <h2>音頻轉摘要 API 測試</h2>
+        
+        <form id="audioToSummaryForm">
+            <div class="form-group">
+                <label for="audio-file-summary">上傳音頻文件:</label>
+                <input type="file" id="audio-file-summary" accept="audio/*" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="meeting-title-audio">會議標題 (選填):</label>
+                <input type="text" id="meeting-title-audio" placeholder="例如: 週一產品規劃會議">
+            </div>
+            
+            <div class="form-group">
+                <label for="participants-audio">參與者 (選填, 用逗號分隔):</label>
+                <input type="text" id="participants-audio" placeholder="例如: 張三, 李四, 王五">
+            </div>
+            
+            <button type="submit">生成文字和摘要</button>
+        </form>
+        
+        <div class="form-group">
+            <h3>轉錄結果:</h3>
+            <div id="audioToSummaryTranscription" class="result">轉錄結果將顯示在這裡...</div>
+        </div>
+        
+        <div class="form-group">
+            <h3>摘要結果:</h3>
+            <div id="audioToSummaryResult" class="result">摘要結果將顯示在這裡...</div>
+        </div>
+    </div>
+    
+    <script>
+        // 切換標籤頁
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+        // 音頻轉文字表單提交
+        document.getElementById('audioToTextForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const audioFile = document.getElementById('audio-file').files[0];
+            if (!audioFile) {
+                alert('請選擇音頻文件');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('audioToTextResult');
+            resultDiv.textContent = '正在處理音頻，請稍候...';
+            resultDiv.className = 'result loading';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', audioFile);
+                
+                const response = await fetch('http://localhost:8003/api/audio-to-text', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.className = 'result';
+                
+                if (data.status === 'success') {
+                    resultDiv.textContent = data.transcription;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">${data.message || '處理失敗'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.className = 'result';
+                resultDiv.innerHTML = `<div class="alert alert-error">發生錯誤: ${error.message}</div>`;
+            }
+        });
+        
+        // 文字轉摘要表單提交
+        document.getElementById('textToSummaryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const meetingTitle = document.getElementById('meeting-title-text').value;
+            const participantsText = document.getElementById('participants-text').value;
+            const meetingText = document.getElementById('meeting-text').value;
+            
+            if (!meetingText) {
+                alert('請輸入會議文字記錄');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('textToSummaryResult');
+            resultDiv.textContent = '正在生成摘要，請稍候...';
+            resultDiv.className = 'result loading';
+            
+            try {
+                const participants = participantsText ? 
+                    participantsText.split(',').map(p => p.trim()).filter(p => p) : 
+                    [];
+                
+                const requestData = {
+                    text: meetingText,
+                    meeting_title: meetingTitle || undefined,
+                    participants: participants.length > 0 ? participants : undefined
+                };
+                
+                const response = await fetch('http://localhost:8001/api/text-to-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.className = 'result';
+                
+                if (response.ok) {
+                    resultDiv.textContent = data.summary;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">${data.detail || '處理失敗'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.className = 'result';
+                resultDiv.innerHTML = `<div class="alert alert-error">發生錯誤: ${error.message}</div>`;
+            }
+        });
+        
+        // 音頻轉摘要表單提交
+        document.getElementById('audioToSummaryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const audioFile = document.getElementById('audio-file-summary').files[0];
+            const meetingTitle = document.getElementById('meeting-title-audio').value;
+            const participantsText = document.getElementById('participants-audio').value;
+            
+            if (!audioFile) {
+                alert('請選擇音頻文件');
+                return;
+            }
+            
+            const transcriptionDiv = document.getElementById('audioToSummaryTranscription');
+            const resultDiv = document.getElementById('audioToSummaryResult');
+            
+            transcriptionDiv.textContent = '正在處理音頻，請稍候...';
+            transcriptionDiv.className = 'result loading';
+            resultDiv.textContent = '正在生成摘要，請稍候...';
+            resultDiv.className = 'result loading';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', audioFile);
+                formData.append('meeting_title', meetingTitle || '');
+                formData.append('participants', participantsText || '');
+                
+                const response = await fetch('http://localhost:8002/api/audio-to-summary', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                transcriptionDiv.className = 'result';
+                resultDiv.className = 'result';
+                
+                if (data.status === 'success') {
+                    transcriptionDiv.textContent = data.transcription;
+                    resultDiv.textContent = data.summary;
+                } else {
+                    transcriptionDiv.innerHTML = `<div class="alert alert-error">${data.message || '處理失敗'}</div>`;
+                    resultDiv.innerHTML = `<div class="alert alert-error">${data.message || '處理失敗'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                transcriptionDiv.className = 'result';
+                resultDiv.className = 'result';
+                transcriptionDiv.innerHTML = `<div class="alert alert-error">發生錯誤: ${error.message}</div>`;
+                resultDiv.innerHTML = `<div class="alert alert-error">發生錯誤: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+# CD 流程
+# Create and configure a Workload Identity Provider for GitHub:
+#   https://github.com/google-github-actions/auth#preferred-direct-workload-identity-federation.
+
+name: 'Build and Deploy to Cloud Run - Production'
+
+on:
+  push:
+    branches:
+      - "main"  
+
+env:
+  PROJECT_ID: 'inai-455513'   # google project id
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/929071234092/locations/global/workloadIdentityPools/ycm-cloudrun-pool/providers/ycm-meeting-airecorder-provider'
+  SERVICE_ACCOUNT: 'ycm-cloudrun-serviceaccount@inai-455513.iam.gserviceaccount.com' # 加入 service account Email
+
+  # GCP Artifact registry
+  REGION: 'us-west1' 
+  ARTIFACT_REGISTRY_NAME: 'ycm-cloudrun-artifact-registry'
+
+  # Docker and GCP Cloud Run
+  PROJECT_NAME: 'ycm-meeting-airecorder'
+  SERVICE: 'ycm-meeting-airecorder-cloudrun' # cloud run service name
+
+jobs:
+  deploy:
+    runs-on: 'ubuntu-latest'
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      # Checkout
+      - name: 'Checkout'
+        uses: 'actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332' # actions/checkout@v4
+
+      # 連接 google workload_identity_provider
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2' # google-github-actions/auth@v2
+        with:
+          workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ env.SERVICE_ACCOUNT }}'  
+          create_credentials_file: true # 建立 gcloud 認證文件
+
+      # BEGIN - Docker auth and build
+      #
+      # 使用 gcloud 配置 Docker 認證
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: 'Configure Docker with gcloud'
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+      
+      - name: 'Build and Push Container'
+        run: |-
+          DOCKER_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_NAME }}/${{ env.PROJECT_NAME }}:${{ github.sha }}"
+          docker build --tag "${DOCKER_TAG}" .
+          docker push "${DOCKER_TAG}"
+
+      # 部屬至 Cloud Run
+      - name: 'Deploy to Cloud Run'
+        uses: 'google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17' # google-github-actions/deploy-cloudrun@v2
+        with:
+          service: '${{ env.SERVICE }}'
+          region: '${{ env.REGION }}'
+          env_vars: |
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+
+          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_NAME }}/${{ env.PROJECT_NAME }}:${{ github.sha }}'

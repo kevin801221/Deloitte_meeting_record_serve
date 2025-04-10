@@ -1,0 +1,49 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# 安裝系統依賴
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    libsndfile1 \
+    portaudio19-dev \
+    python3-pyaudio \
+    python3-dev \
+    build-essential \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安裝 Python 依賴
+RUN pip install --no-cache-dir \
+    fastapi==0.95.0 \
+    uvicorn==0.21.1 \
+    python-multipart==0.0.6 \
+    openai==0.27.4 \
+    pydantic==1.10.7 \
+    python-dotenv==1.0.0 \
+    numpy==1.24.0 \
+    pydub==0.25.1 \
+    SpeechRecognition==3.10.0 \
+    requests==2.28.2 \
+    gradio==3.50.2 \
+    whisper==1.1.10
+
+# 創建必要的目錄
+RUN mkdir -p /app/uploads /app/temp /app/AI_meeting_by_Gradio/exports /app/AI_meeting_by_Gradio/uploads
+
+# 複製 API 文件
+COPY ./api /app/api
+COPY ./AI_meeting_by_Gradio /app/AI_meeting_by_Gradio
+COPY ./utils /app/utils
+COPY ./.env /app/.env
+
+# 暴露端口 (Cloud Run 要求使用 8080 端口)
+EXPOSE 8080
+
+# 健康檢查
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+# 啟動 API 服務 (使用 8080 端口)
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8080"]
